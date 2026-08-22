@@ -17,7 +17,7 @@ const RETENTION_DAYS = 30; // เก็บ backup ย้อนหลังกี
 
 // รหัส อบต. ที่อนุญาตให้ใช้งาน (กันพิมพ์ผิด/สร้าง key มั่ว)
 // เพิ่ม อบต. ใหม่ได้โดยเติมรหัสลงในลิสต์นี้
-const ALLOWED_ABT = ["lalom", "ltaxmap"];
+const ALLOWED_ABT = ["lalom", "ltaxmap", "takhianram"];
 
 export default {
   async fetch(request, env, ctx) {
