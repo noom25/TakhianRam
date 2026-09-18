@@ -20,8 +20,7 @@ async function saveToServer() {
   console.log(`💾 Attempting to save ${gj.features.length} features...`);
   
   // เรียก Cloudflare Worker (ต้องระบุ abt เสมอ ไม่งั้น worker จะปฏิเสธด้วย 400)
-  // ใช้ตัวแปรกลางจาก config.js เสมอ ห้าม hardcode ชื่อ อบต. ตรงนี้อีก
-  const saveUrl = API_SAVE_URL;
+  const saveUrl = `/api/save?abt=${CONFIG.ABT_CODE}`;
   
   console.log(`📍 Save URL: ${saveUrl}`);
   

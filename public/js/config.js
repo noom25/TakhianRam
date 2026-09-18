@@ -1,13 +1,8 @@
 /* ====================== CONFIGURATION ====================== */
 
-// ⚠️ จุดเดียวที่ต้องแก้เวลาย้าย/เพิ่ม อบต. ใหม่ ⚠️
-// รหัส อบต. ปัจจุบัน — ต้องตรงกับที่เพิ่มไว้ใน ALLOWED_ABT ของ _worker.js ด้วย
-const ABT_CODE = "takhianram";
-
-// Endpoint สำหรับบันทึก/โหลดข้อมูลผ่าน Cloudflare Worker + KV
-// ไฟล์อื่น (layers.js, storage.js) ต้องเรียกใช้ตัวแปรนี้เสมอ ห้าม hardcode "?abt=..." ตรง ๆ อีก
-const API_LOAD_URL = `/api/load?abt=${ABT_CODE}`;
-const API_SAVE_URL = `/api/save?abt=${ABT_CODE}`;
+// รหัส อบต. ของเว็บนี้ — ต้องตรงกับ ALLOWED_ABT ใน _worker.js
+// (นี่คือจุดเดียวที่ต้องแก้ตอนนำโค้ดชุดนี้ไปทำเว็บให้ อบต. อื่น)
+const ABT_CODE = "lalom";
 
 // Data File Paths
 const DATA_PARCEL   = "data/parcel.geojson";
@@ -21,7 +16,7 @@ const DATA_แปลงชุมชน = "data/แปลงชุมชน.geojs
 const DATA_BPOINT   = "data/boundarypoint.geojson";
 
 // Map Initial Settings
-const START_CENTER = [14.5422, 104.1458];
+const START_CENTER = [14.6005, 104.2500];
 const START_ZOOM   = 15;
 
 // Layer Styles
@@ -100,8 +95,6 @@ const $ = (id) => document.getElementById(id);
 if (typeof window !== 'undefined') {
   window.CONFIG = {
     ABT_CODE,
-    API_LOAD_URL,
-    API_SAVE_URL,
     DATA_PARCEL,
     DATA_BLOCK,
     DATA_ZONE,
