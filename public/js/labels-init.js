@@ -8,7 +8,10 @@
  * ============================================================= */
 
 (function () {
-  const PROP     = 'parcel_code';
+  // ชื่อฟิลด์รหัสแปลงต่างกันในแต่ละ อบต. (shapefile ตัดชื่อเหลือ 10 ตัวอักษร)
+  // ไล่หาตามลำดับนี้ เจออันไหนก่อนใช้อันนั้น
+  const PROPS = ['parcel_code', 'PARCEL_CODE', 'PARCEL_COD', 'parcel_cod', 'ParcelCode'];
+
   const STORE_KEY = 'ltaxmap_show_labels';
 
   // ตำแหน่งปุ่ม: topleft / topright / bottomleft / bottomright
@@ -62,9 +65,22 @@
 
   /* ---------- เก็บ feature ---------- */
 
+  let foundKey = null;     // ชื่อฟิลด์ที่เจอจริงบนเว็บนี้
+
+  function codeKey(p) {
+    for (let i = 0; i < PROPS.length; i++) {
+      const v = p[PROPS[i]];
+      if (v !== undefined && v !== null && v !== '') return PROPS[i];
+    }
+    return null;
+  }
+
   function collect(layer, out) {
     const p = layer.feature && layer.feature.properties;
-    if (p && p[PROP] !== undefined && p[PROP] !== null && p[PROP] !== '') out.push(layer.feature);
+    if (p) {
+      const k = codeKey(p);
+      if (k) { out.push(layer.feature); if (!foundKey) foundKey = k; }
+    }
     if (layer.eachLayer) layer.eachLayer(function (c) { collect(c, out); });
     return out;
   }
@@ -135,7 +151,7 @@
     function build() {
       if (!labels) labels = new L.CanvasLabels(OPTS).addTo(map);
       const feats = collectParcels(map);
-      labels.setFromGeoJSON({ type: 'FeatureCollection', features: feats }, PROP);
+      labels.setFromGeoJSON({ type: 'FeatureCollection', features: feats }, foundKey || PROPS[0]);
       dirty = feats.length === 0;          // ยังไม่มีข้อมูล = ลองใหม่รอบหน้า
       return feats.length;
     }
@@ -144,7 +160,7 @@
       if (!enabled) { if (labels) labels.setVisible(false); return; }
       if (dirty) {
         const n = build();
-        if (n > 0) console.log('[labels] แสดงรหัสแปลง ' + n + ' แปลง');
+        if (n > 0) console.log('[labels] แสดงรหัสแปลง ' + n + ' แปลง (ฟิลด์ ' + foundKey + ')');
       }
       if (labels) labels.setVisible(true);
     }

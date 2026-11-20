@@ -9,7 +9,19 @@
  * ============================================================= */
 
 (function () {
-  const PROP = 'parcel_code';
+  // ชื่อฟิลด์ต่างกันในแต่ละ อบต. (shapefile ตัดชื่อเหลือ 10 ตัวอักษร) — ไล่หาเอง
+  const PROPS = ['parcel_code', 'PARCEL_CODE', 'PARCEL_COD', 'parcel_cod', 'ParcelCode'];
+  const ZONES = ['zone', 'ZONE_ID', 'ZONE'];
+  const BLOCKS = ['block', 'BLOCK_ID', 'BLOCK'];
+  const LOTS  = ['lot', 'LOT', 'PARCEL_NO'];
+
+  function pick(p, names) {
+    for (let i = 0; i < names.length; i++) {
+      const v = p[names[i]];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return null;
+  }
 
   // ตำแหน่งปุ่ม: topleft / topright / bottomleft / bottomright
   // topright ชนกับกล่อง Layers เดิม เลยใช้ topleft (ต่อจากปุ่มซูม/วาด)
@@ -35,7 +47,7 @@
 
   function collect(layer, out) {
     const p = layer.feature && layer.feature.properties;
-    if (p && p[PROP]) out.push(layer.feature);
+    if (p && pick(p, PROPS) !== null) out.push(layer.feature);
     if (layer.eachLayer) layer.eachLayer(function (c) { collect(c, out); });
     return out;
   }
@@ -189,18 +201,19 @@
           hilite = L.polygon(latlngs, { color: '#ff9800', weight: 4, fillColor: '#ff9800',
                                         fillOpacity: .25, interactive: false }).addTo(map);
         }
+        const code = pick(p, PROPS);
         banner.innerHTML =
           '<div style="font-size:26px;font-weight:800;color:#0d6efd;letter-spacing:.5px">'
-            + p[PROP] + '</div>' +
+            + code + '</div>' +
           '<div style="color:#444;margin-top:2px">' +
-            'โซน ' + (p.zone || '-') + ' · บล็อก ' + (p.block || '-') +
-            ' · ล็อต ' + (p.lot || '-') + '</div>' +
+            'โซน ' + (pick(p, ZONES) || '-') + ' · บล็อก ' + (pick(p, BLOCKS) || '-') +
+            ' · ล็อต ' + (pick(p, LOTS) || '-') + '</div>' +
           '<div style="color:#888;font-size:12px;margin-top:2px">ความแม่นยำ ±' + acc + ' ม.</div>';
         banner.style.borderColor = '#0d6efd';
         banner.onclick = hilite ? function () { map.fitBounds(hilite.getBounds(), { maxZoom: 19 }); } : null;
 
-        if (p[PROP] !== lastCode && navigator.vibrate) navigator.vibrate(60);   // สั่นเตือนตอนเข้าแปลงใหม่
-        lastCode = p[PROP];
+        if (code !== lastCode && navigator.vibrate) navigator.vibrate(60);   // สั่นเตือนตอนเข้าแปลงใหม่
+        lastCode = code;
       } else {
         banner.innerHTML =
           '<div style="font-size:16px;color:#666">ไม่ได้อยู่ในแปลงที่มีข้อมูล</div>' +
