@@ -21,7 +21,13 @@
  *   GET  /api/load[?abt=]        ข้อมูลแปลงล่าสุด (R2 → ถ้าไม่มีใช้ KV เดิม)
  *   POST /api/save[?abt=]        บันทึกข้อมูลแปลง
  *   GET  /reports/<รหัส>.<ext>   ใบ ผ.ท.13 (R2 → ถ้าไม่มีใช้ static เดิม)
- *   GET  /admin/...              เครื่องมือผู้ดูแล ต้องมี ?token=
+ *   GET  /admin/migrate          ย้าย parcel.geojson จาก KV มา R2
+ *   GET  /admin/seed             ดูดชั้นข้อมูลอื่นจาก public/data/ ขึ้น R2
+ *   GET  /admin/list             ดูว่ามีอะไรอยู่บน R2 บ้าง
+ *   GET  /admin/backup           สำรองเดี๋ยวนี้
+ *   GET  /admin/backups          ดูรายการชุดสำรอง
+ *   GET  /admin/restore          กู้คืน
+ *   ทุกคำสั่ง /admin/ ต้องมี ?token=<ADMIN_TOKEN>
  */
 
 /* ====================== ตั้งค่า ====================== */
@@ -36,6 +42,13 @@ const RETENTION_DAYS = 30;        // เก็บ backup ย้อนหลั�
 const PARCEL_FILE = "parcel.geojson";
 const DATA_CACHE_SECONDS = 3600;  // cache ชั้นข้อมูลที่ไม่ค่อยเปลี่ยน
 const MAX_UPLOAD = 25 * 1024 * 1024;
+
+// ชั้นข้อมูลที่ /admin/seed จะดูดจาก public/data/ ขึ้น R2 ให้
+// ไม่รวม parcel.geojson เพราะของจริงต้องมาจาก /admin/migrate เท่านั้น
+const SEED_FILES = [
+  "block", "zone", "boundary", "building", "spk",
+  "boundarypoint", "grid4000", "แปลงเกษตร", "แปลงชุมชน",
+];
 
 const PT13_EXT = ["pdf", "png", "jpg"];
 const PT13_TYPE = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg" };
@@ -389,6 +402,39 @@ async function adminRoute(request, env, url, path) {
       กู้จาก: date,
       กู้แล้ว: done,
       ของเดิมเก็บไว้ที่: `backup/${abt}/before-restore-${stamp}/`,
+    });
+  }
+
+  /* ดูดชั้นข้อมูลจาก public/data/ ขึ้น R2 — ไม่ต้องใช้ wrangler */
+  if (path === "/admin/seed") {
+    const found = [], missing = [], copied = [];
+
+    for (const n of SEED_FILES) {
+      const name = n + ".geojson";
+      const assetUrl = new URL("/data/" + encodeURIComponent(name), request.url);
+      const res = await env.ASSETS.fetch(new Request(assetUrl));
+
+      // ไม่มีไฟล์นี้ในเว็บ หรือได้หน้า html กลับมาแทน = ข้าม
+      const type = res.headers.get("content-type") || "";
+      if (!res.ok || type.includes("text/html")) { missing.push(name); continue; }
+
+      found.push(name);
+      if (!run) { await res.body.cancel(); continue; }
+
+      await env.BUCKET.put(`data/${abt}/${name}`, res.body, {
+        httpMetadata: { contentType: "application/json; charset=utf-8" },
+      });
+      copied.push(name);
+    }
+
+    return jsonResponse({
+      ok: true,
+      อบต: abt,
+      ทำจริงหรือยัง: run,
+      พบไฟล์: found,
+      ไม่มีไฟล์นี้: missing,
+      อัปแล้ว: copied,
+      หมายเหตุ: "parcel.geojson ไม่รวมอยู่ในนี้ ต้องย้ายผ่าน /admin/migrate เท่านั้น",
     });
   }
 
