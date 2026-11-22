@@ -38,7 +38,7 @@ const FALLBACK_ABT = "prueyai";
 // รหัสที่อนุญาต กันพิมพ์ผิดแล้วไปสร้างโฟลเดอร์มั่วบน R2
 const ALLOWED_ABT = ["prueyai", "ltaxmap", "takhianram", "lalom"];
 
-const RETENTION_DAYS = 30;        // เก็บ backup ย้อนหลังกี่วัน
+const RETENTION_DAYS = 7;        // เก็บ backup ย้อนหลังกี่วัน
 const PARCEL_FILE = "parcel.geojson";
 const DATA_CACHE_SECONDS = 3600;  // cache ชั้นข้อมูลที่ไม่ค่อยเปลี่ยน
 const MAX_UPLOAD = 25 * 1024 * 1024;
